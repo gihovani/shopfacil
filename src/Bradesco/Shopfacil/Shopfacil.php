@@ -16,7 +16,7 @@ class Shopfacil
     private $customer = [];
     private $customerAddress = [];
     private $billet = [];
-    private $billetInfo = array();
+    private $billetInfo = [];
 
     private $token = null;
 
@@ -36,14 +36,14 @@ class Shopfacil
 
     public function _init()
     {
-        $this->conf = array(
+        $this->conf = [
             'dias_vencimento_boleto' => 5,
-            'beneficiario' => 'Dental Cremer',
+            'beneficiario' => 'GG2 LTDA',
             'carteira' => '25',
-            'url_logotipo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Logomarca_Dental_Cremer.png/240px-Logomarca_Dental_Cremer.png',
-            'mensagem_cabecalho' => 'Boleto Dental Cremer',
+            'url_logotipo' => 'https://gg2.com.br/site/images/logo-arte.png',
+            'mensagem_cabecalho' => 'Boleto Bradesco GG2',
             'tipo_renderizacao' => '2',
-        );
+        ];
     }
 
     public function serviceBuildBillet(
@@ -55,14 +55,14 @@ class Shopfacil
         $this->setOrder($pedidoNumero, $pedidoValor, $pedidoDescricao);
         $this->setCustomer($compradorNome, $compradoCpfCnpj);
         $this->setCustomerAddress($compradorCep, $compradorUf, $compradorCidade, $compradorBairro, $compradorLogradouro, $compradorNumero, $compradorComplemento);
-        $params = array(
+        $params = [
             'merchant_id' => $this->merchantId,
             'meio_pagamento' => '300',
             'pedido' => $this->getOrder(),
             'comprador' => $this->getCustomer(),
             'boleto' => $this->getBillet(),
             'token_request_confirmacao_pagamento' => base64_encode($this->nossoNumero())
-        );
+        ];
 
         $data_post = json_encode($params);
         $url = '/apiboleto/transacao';
@@ -89,11 +89,11 @@ class Shopfacil
      */
     public function setOrder($numero, $valor, $descricao = '')
     {
-        $this->order = array(
+        $this->order = [
             'numero' => $numero,
             'valor' => number_format($valor, 2, '', ''),
             'descricao' => $descricao
-        );
+        ];
         return $this->order;
     }
 
@@ -123,12 +123,12 @@ class Shopfacil
      */
     public function setCustomer($nome, $cpfCnpj, $ip = '', $userAgent = '')
     {
-        $this->customer = array(
+        $this->customer = [
             'nome' => $nome,
             'documento' => $this->onlyNumbers($cpfCnpj),
             'ip' => ($ip) ? $ip : $_SERVER['REMOTE_ADDR'],
             'user_agent' => ($userAgent) ? $userAgent : $_SERVER['HTTP_USER_AGENT']
-        );
+        ];
         return $this;
     }
 
@@ -159,7 +159,7 @@ class Shopfacil
      */
     public function setCustomerAddress($cep, $uf, $cidade, $bairro, $logradouro, $numero, $complemento = '')
     {
-        $this->customerAddress = array(
+        $this->customerAddress = [
             'cep' => $this->onlyNumbers($cep),
             'logradouro' => $logradouro,
             'numero' => $numero,
@@ -167,7 +167,7 @@ class Shopfacil
             'bairro' => $bairro,
             'cidade' => $cidade,
             'uf' => $uf
-        );
+        ];
         return $this;
     }
 
@@ -279,7 +279,7 @@ class Shopfacil
     {
         $url = (($this->sandbox) ? self::URL_SANDBOX : self::URL_PROD) . $uri;
         //Configuracao do cabecalho da requisicao
-        $headers = array();
+        $headers = [];
         $headers[] = 'Accept: application/json';
         $headers[] = 'Accept-Charset: UTF-8';
         $headers[] = 'Accept-Encoding: application/json';

@@ -1,9 +1,5 @@
 <?php
-
-$merchantId = '';
-$merchantKey = '';
-$merchantEmail = '';
-
+require_once 'conf.php';
 $shopfacil = new Bradesco\Shopfacil\Shopfacil($merchantId, $merchantKey, $merchantEmail);
-$api = $shopfacil->serviceGetOrderById(1);
-print json_encode($api);
+$data = $shopfacil->serviceGetOrderById(1);
+var_dump($data);

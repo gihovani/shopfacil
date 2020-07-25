@@ -1,0 +1,4 @@
+<?php
+$merchantId = '';
+$merchantKey = '';
+$merchantEmail = '';

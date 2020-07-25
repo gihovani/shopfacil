@@ -2,26 +2,13 @@
 
 MEIOS DE PAGAMENTO BRADESCO BOLETO BANCÁRIO
 
-### Installation
-
-To install Bradesco ShopFácil, simply:
-
-    $ composer require gihovani/shopfacil
-    or
-    $ composer require gihovani/shopfacil:dev-master
-
-For latest commit version:
-
-    $ composer require gihovani/shopfacil @dev
 
 ### Requirements
 
 Bradesco ShopFácil works with PHP7+.
 
 ### Doação / Donate
-Doar com PagSeguro
-https://pag.ae/bkWHjW
-
+Doar com PagSeguro (https://pag.ae/bkWHjW)
 
 
 ### Consultoria / consulting
@@ -31,15 +18,11 @@ https://gg2.com.br
 ### Exemplo / Example
 
 ```php
-require __DIR__ . '/vendor/autoload.php';
-
-use Bradesco\Shopfacil\Shopfacil as Shopfacil;
-
 $merchantId = 'preencha aqui';
 $merchantKey = 'preencha aqui';
 $merchantEmail = 'contato@gg2.com.br';
 
-$shopfacil = new Shopfacil($merchantId, $merchantKey, $merchantEmail);
+$shopfacil = new Bradesco\Shopfacil\Shopfacil($merchantId, $merchantKey, $merchantEmail);
 
 // Gerar Boleto
 $data = $shopfacil->serviceBuildBillet(2, 25.00, '', 'Gihovani Demetrio', '041.843.018-78', '88106-000', 'SC', 'São José', 'Picadas do Sul', 'Rua Luiz Fagundes', '2270');

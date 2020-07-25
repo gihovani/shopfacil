@@ -1,400 +1,369 @@
 <?php
 
-/*
- * Shopfacil
- * @author GilcierWeb
- * @date 12/01/2017
- * */
-
 namespace Bradesco\Shopfacil;
 
 class Shopfacil
 {
-    public $merchant_id = null;
-    public $email = null;
-    public $chave_seguranca = null;
-    public $media_type = 'application/json';
-    public $charset = 'UTF-8';
+    const URL_SANDBOX = 'https://homolog.meiosdepagamentobradesco.com.br';
+    const URL_PROD = 'https://meiosdepagamentobradesco.com.br';
 
-    public $sandbox = false;
+    public $sandbox = true;
+    private $conf;
+    private $merchantId = null;
+    private $merchantKey = null;
+    private $merchantEmail = null;
+    private $order = [];
+    private $customer = [];
+    private $customerAddress = [];
+    private $billet = [];
+    private $billetInfo = array();
 
-    public $url_homologacao = 'https://homolog.meiosdepagamentobradesco.com.br';
-    public $url_producao = 'https://meiosdepagamentobradesco.com.br';
-
-    public $pedido_numero = 0;
-    public $pedido_descricao = null;
-    public $pedido_valor = 0;
-
-    public $comprador_endereco_cep = null;
-    public $comprador_endereco_logradouro = null;
-    public $comprador_endereco_numero = null;
-    public $comprador_endereco_complemento = null;
-    public $comprador_endereco_bairro = null;
-    public $comprador_endereco_cidade = null;
-    public $comprador_endereco_uf = null;
-    public $comprador_nome = null;
-    public $comprador_documento = null;
-    public $comprador_ip = null;
-    public $comprador_user_agent = null;
-
-    public $boleto_beneficiario = null;
-    public $boleto_carteira = null;
-    public $boleto_nossoNumero = null;
-    public $boleto_dataEmissao = null;
-    public $boleto_dataVencimento = null;
-    public $boleto_valorTitulo = null;
-    public $boleto_urlLogotipo = null;
-    public $boleto_mensagemCabecalho = null;
-    public $boleto_tipoRenderizacao = null;
-
-    public $boleto_instrucoes_instrucaoLinha1 = null;
-    public $boleto_instrucoes_instrucaoLinha2 = null;
-    public $boleto_instrucoes_instrucaoLinha3 = null;
-    public $boleto_instrucoes_instrucaoLinha4 = null;
-    public $boleto_instrucoes_instrucaoLinha5 = null;
-    public $boleto_instrucoes_instrucaoLinha6 = null;
-    public $boleto_instrucoes_instrucaoLinha7 = null;
-    public $boleto_instrucoes_instrucaoLinha8 = null;
-    public $boleto_instrucoes_instrucaoLinha9 = null;
-    public $boleto_instrucoes_instrucaoLinha10 = null;
-    public $boleto_instrucoes_instrucaoLinha11 = null;
-    public $boleto_instrucoes_instrucaoLinha12 = null;
-
-    private $data_service_pedido = array();
-    private $data_service_comprador_endereco = array();
-    private $data_service_comprador = array();
-    private $data_service_boleto_instrucoes = array();
-    private $data_service_boleto = array();
-    public $data_service_boleto_registro = null;
-
-    public $token_request_confirmacao_pagamento = null;
-    public $token = null;
+    private $token = null;
 
     /**
      * Shopfacil constructor.
-     * @param $merchantId
-     * @param $chaveSeguranca
-     * @param bool $email
+     * @param string $merchantId
+     * @param string $merchantKey
+     * @param string|null $merchantEmail
      */
-    public function __construct($merchantId, $chaveSeguranca, $email = null)
+    public function __construct($merchantId, $merchantKey, $merchantEmail = null)
     {
-        $this->merchant_id = trim($merchantId);
-        $this->chave_seguranca = trim($chaveSeguranca);
-        $this->email = trim($email);
+        $this->merchantId = trim($merchantId);
+        $this->merchantKey = trim($merchantKey);
+        $this->merchantEmail = trim($merchantEmail);
+        $this->_init();;
     }
 
-    /**
-     * @return array
-     */
-    public function getDataServicePedido()
+    public function _init()
     {
-        return $this->data_service_pedido;
+        $this->conf = array(
+            'dias_vencimento_boleto' => 5,
+            'beneficiario' => 'Dental Cremer',
+            'carteira' => '25',
+            'url_logotipo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Logomarca_Dental_Cremer.png/240px-Logomarca_Dental_Cremer.png',
+            'mensagem_cabecalho' => 'Boleto Dental Cremer',
+            'tipo_renderizacao' => '2',
+        );
     }
 
-    /**
-     * @param array $data_service_pedido
-     * @return Shopfacil
-     */
-    public function setDataServicePedido($data_service_pedido)
+    public function serviceBuildBillet(
+        $pedidoNumero, $pedidoValor, $pedidoDescricao = '',
+        $compradorNome = '', $compradoCpfCnpj = '',
+        $compradorCep = '', $compradorUf = '', $compradorCidade = '', $compradorBairro = '', $compradorLogradouro = '', $compradorNumero = '', $compradorComplemento = ''
+    )
     {
-        $this->data_service_pedido = $data_service_pedido;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDataServiceCompradorEndereco()
-    {
-        return $this->data_service_comprador_endereco;
-    }
-
-    /**
-     * @param array $data_service_comprador_endereco
-     * @return Shopfacil
-     */
-    public function setDataServiceCompradorEndereco($data_service_comprador_endereco)
-    {
-        $this->data_service_comprador_endereco = $data_service_comprador_endereco;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDataServiceComprador()
-    {
-        return $this->data_service_comprador;
-    }
-
-    /**
-     * @param array $data_service_comprador
-     * @return Shopfacil
-     */
-    public function setDataServiceComprador($data_service_comprador)
-    {
-        $this->data_service_comprador = $data_service_comprador;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDataServiceBoletoInstrucoes()
-    {
-        return $this->data_service_boleto_instrucoes;
-    }
-
-    /**
-     * @param array $data_service_boleto_instrucoes
-     * @return Shopfacil
-     */
-    public function setDataServiceBoletoInstrucoes($data_service_boleto_instrucoes)
-    {
-        $this->data_service_boleto_instrucoes = $data_service_boleto_instrucoes;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDataServiceBoleto()
-    {
-        return $this->data_service_boleto;
-    }
-
-    /**
-     * @param array $data_service_boleto
-     * @return Shopfacil
-     */
-    public function setDataServiceBoleto($data_service_boleto)
-    {
-        $this->data_service_boleto = $data_service_boleto;
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function dataServicePedido()
-    {
-        $this->data_service_pedido = array(
-            "numero" => $this->pedido_numero,
-            "valor" => (double)$this->pedido_valor,
-            "descricao" => $this->pedido_descricao
+        $this->setOrder($pedidoNumero, $pedidoValor, $pedidoDescricao);
+        $this->setCustomer($compradorNome, $compradoCpfCnpj);
+        $this->setCustomerAddress($compradorCep, $compradorUf, $compradorCidade, $compradorBairro, $compradorLogradouro, $compradorNumero, $compradorComplemento);
+        $params = array(
+            'merchant_id' => $this->merchantId,
+            'meio_pagamento' => '300',
+            'pedido' => $this->getOrder(),
+            'comprador' => $this->getCustomer(),
+            'boleto' => $this->getBillet(),
+            'token_request_confirmacao_pagamento' => base64_encode($this->nossoNumero())
         );
 
-        return $this->data_service_pedido;
-    }
-
-    /**
-     * @return array
-     */
-    public function dataServiceCompradorEndereco()
-    {
-        $this->data_service_comprador_endereco = array(
-            "cep" => $this->comprador_endereco_cep,
-            "logradouro" => $this->comprador_endereco_logradouro,
-            "numero" => $this->comprador_endereco_numero,
-            "complemento" => $this->comprador_endereco_complemento,
-            "bairro" => $this->comprador_endereco_bairro,
-            "cidade" => $this->comprador_endereco_cidade,
-            "uf" => $this->comprador_endereco_uf
-        );
-
-        return $this->data_service_comprador_endereco;
-
-    }
-
-    /**
-     * @return array
-     */
-    public function dataServiceComprador()
-    {
-        $this->data_service_comprador = array(
-            "nome" => $this->comprador_nome,
-            "documento" => $this->comprador_documento,
-            "endereco" => $this->dataServiceCompradorEndereco(),
-            "ip" => $_SERVER["REMOTE_ADDR"],
-            "user_agent" => $_SERVER["HTTP_USER_AGENT"]
-        );
-
-        return $this->data_service_comprador;
-    }
-
-    /**
-     * @return array
-     */
-    public function dataServiceBoleto()
-    {
-        $this->data_service_boleto = array(
-            "beneficiario" => $this->boleto_beneficiario,
-            "carteira" => $this->boleto_carteira,
-            "nosso_numero" => substr((string)$this->boleto_nossoNumero, -11),
-            "data_emissao" => $this->boleto_dataEmissao,
-            "data_vencimento" => $this->boleto_dataVencimento,
-            "valor_titulo" => $this->boleto_valorTitulo,
-            "url_logotipo" => $this->boleto_urlLogotipo,
-            "mensagem_cabecalho" => $this->boleto_mensagemCabecalho,
-            "tipo_renderizacao" => $this->boleto_tipoRenderizacao,
-            "instrucoes" => $this->dataServiceBoletoInstrucoes(),
-            "registro" => $this->data_service_boleto_registro
-        );
-
-        return $this->data_service_boleto;
-
-    }
-
-    /**
-     * @return array
-     */
-    public function dataServiceBoletoInstrucoes()
-    {
-        $this->data_service_boleto_instrucoes = array(
-            "instrucao_linha_1" => $this->boleto_instrucoes_instrucaoLinha1,
-            "instrucao_linha_2" => $this->boleto_instrucoes_instrucaoLinha2,
-            "instrucao_linha_3" => $this->boleto_instrucoes_instrucaoLinha3,
-            "instrucao_linha_4" => $this->boleto_instrucoes_instrucaoLinha4,
-            "instrucao_linha_5" => $this->boleto_instrucoes_instrucaoLinha5,
-            "instrucao_linha_6" => $this->boleto_instrucoes_instrucaoLinha6,
-            "instrucao_linha_7" => $this->boleto_instrucoes_instrucaoLinha7,
-            "instrucao_linha_8" => $this->boleto_instrucoes_instrucaoLinha8,
-            "instrucao_linha_9" => $this->boleto_instrucoes_instrucaoLinha9,
-            "instrucao_linha_10" => $this->boleto_instrucoes_instrucaoLinha10,
-            "instrucao_linha_11" => $this->boleto_instrucoes_instrucaoLinha11,
-            "instrucao_linha_12" => $this->boleto_instrucoes_instrucaoLinha12
-        );
-
-        return $this->data_service_boleto_instrucoes;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function serviceRequest()
-    {
-        $data_service_request = array(
-            "merchant_id" => $this->merchant_id,
-            "meio_pagamento" => "300",
-            "pedido" => $this->dataServicePedido(),
-            "comprador" => $this->dataServiceComprador(),
-            "boleto" => $this->dataServiceBoleto(),
-            "token_request_confirmacao_pagamento" => $this->token_request_confirmacao_pagamento
-        );
-
-        $data_post = json_encode($data_service_request);
-
-        $url = "/apiboleto/transacao";
-
+        $data_post = json_encode($params);
+        $url = '/apiboleto/transacao';
         return $this->sendCurl($url, $data_post);
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    public function serviceAuthorization()
+    public function getOrder()
     {
-        $url = "/SPSConsulta/Authentication/" . $this->merchant_id;
-
-        return $this->sendCurl($url, null, true);
+        if (empty($this->order)) {
+            throw new ShopFacilException('Faltam os dados do pedido.');
+        }
+        return $this->order;
     }
 
     /**
-     * @param array getToken
+     * @param string $numero
+     * @param double $valor
+     * @param string $descricao
+     * @return array
+     * @throws ShopFacilException
+     */
+    public function setOrder($numero, $valor, $descricao = '')
+    {
+        $this->order = array(
+            'numero' => $numero,
+            'valor' => number_format($valor, 2, '', ''),
+            'descricao' => $descricao
+        );
+        return $this->order;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCustomer()
+    {
+        if (
+            empty($this->customer) or
+            empty($this->customer['nome']) or
+            empty($this->customer['documento'])
+        ) {
+            throw new ShopFacilException('Faltam os dados do comprador.');
+        }
+        $tmp = $this->customer;
+        $tmp['endereco'] = $this->getCustomerAddress();
+        return $tmp;
+    }
+
+    /**
+     * @param string $nome
+     * @param string $cpfCnpj
+     * @param string $ip
+     * @param string $userAgent
+     * @return $this
+     */
+    public function setCustomer($nome, $cpfCnpj, $ip = '', $userAgent = '')
+    {
+        $this->customer = array(
+            'nome' => $nome,
+            'documento' => $this->onlyNumbers($cpfCnpj),
+            'ip' => ($ip) ? $ip : $_SERVER['REMOTE_ADDR'],
+            'user_agent' => ($userAgent) ? $userAgent : $_SERVER['HTTP_USER_AGENT']
+        );
+        return $this;
+    }
+
+    public function getCustomerAddress()
+    {
+        if (
+            empty($this->customerAddress) or
+            empty($this->customerAddress['cep']) or
+            empty($this->customerAddress['logradouro']) or
+            empty($this->customerAddress['cidade']) or
+            empty($this->customerAddress['uf'])
+        ) {
+            throw new ShopFacilException('Faltam os dados do endereço do comprador.');
+        }
+        return $this->customerAddress;
+    }
+
+    /**
+     * @param string $cep
+     * @param string $uf
+     * @param string $cidade
+     * @param string $bairro
+     * @param string $logradouro
+     * @param string $numero
+     * @param string $complemento
+     * @return $this
+     * @throws ShopFacilException
+     */
+    public function setCustomerAddress($cep, $uf, $cidade, $bairro, $logradouro, $numero, $complemento = '')
+    {
+        $this->customerAddress = array(
+            'cep' => $this->onlyNumbers($cep),
+            'logradouro' => $logradouro,
+            'numero' => $numero,
+            'complemento' => $complemento,
+            'bairro' => $bairro,
+            'cidade' => $cidade,
+            'uf' => $uf
+        );
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getBillet()
+    {
+        if (empty($this->billet)) {
+            $this->setBillet();
+        }
+
+        $tmp = $this->billet;
+        $tmp['instrucoes'] = $this->getBilletInfo();
+        return $tmp;
+    }
+
+    /**
+     * @param string $dataVencimento
+     * @param string $dataEmissao
+     * @param array|null $registro
+     * @return $this
+     */
+    public function setBillet($dataVencimento = '', $dataEmissao = '', $registro = null)
+    {
+        if (empty($dataEmissao)) {
+            $dataEmissao = date('Y-m-d');
+        }
+        if (empty($dataVencimento)) {
+            $dias = intval($this->conf['dias_vencimento_boleto']);
+            $dataVencimento = date('Y-m-d', strtotime('+' . $dias . ' days'));
+        }
+        $nossoNumero = $this->nossoNumero();
+        $this->billet = [
+            'beneficiario' => $this->conf['beneficiario'],
+            'carteira' => $this->conf['carteira'],
+            'nosso_numero' => $nossoNumero,
+            'data_emissao' => $dataEmissao,
+            'data_vencimento' => $dataVencimento,
+            'valor_titulo' => $this->getOrder()['valor'],
+            'url_logotipo' => $this->conf['url_logotipo'],
+            'mensagem_cabecalho' => $this->conf['mensagem_cabecalho'],
+            'tipo_renderizacao' => $this->conf['tipo_renderizacao'],
+            'registro' => $registro
+        ];
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getBilletInfo()
+    {
+        for ($i = 1; $i <= 12; $i++) {
+            if (!isset($this->billetInfo['instrucao_linha_' . $i])) {
+                $this->billetInfo['instrucao_linha_' . $i] = '';
+            }
+        }
+        return $this->billetInfo;
+    }
+
+    /**
+     * @param array|string $info
+     * @param int $line
      * @return Shopfacil
      */
-    public function getToken()
+    public function setBilletInfo($info, $line = 0)
     {
-
-        if ($this->serviceAuthorization()->status->codigo != 0) {
-            return false;
-        }
-
-        $token = $this->serviceAuthorization()->token->token;
-        if (!empty($token)) {
-            $this->token = $this->serviceAuthorization()->token->token;
-            return $this->token;
+        if (!is_array($info)) {
+            if (!$line) {
+                $line = count($this->billetInfo) + 1;
+            }
+            $this->billetInfo['instrucao_linha_' . ($line - 1)] = $info;
         } else {
-            return false;
+            $this->billetInfo = $info;
         }
+        return $this;
     }
 
     /**
-     * @param $orderID
-     * @return mixed
+     * @param int $numeroParcela
+     * @return false|string
+     * @throws ShopFacilException
      */
-    public function serviceGetOrderById($orderID)
+    private function nossoNumero($numeroParcela = 1)
     {
-        $url = "/SPSConsulta/GetOrderById/" . $this->merchant_id . "?token=" . $this->getToken() . "&orderId=" . $orderID;
-        return $this->sendCurl($url, null, true);
+        $numeroParcela = $this->zeroDireita($numeroParcela, 3);
+        $numeroPedido = $this->zeroDireita($this->getOrder()['numero'], 8);
+        return substr((string)$numeroPedido . $numeroParcela, -11);
     }
 
     /**
-     * @param string $type
-     * @param $dateInitial
-     * @param $dateFinal
-     * @param $status
-     * @param $offset
-     * @param $limit
-     * @return mixed
+     * @param string $valor
+     * @param int $quantidade
+     * @return string
      */
-    public function serviceGetOrderListPayment($type = 'boleto', $dateInitial, $dateFinal, $status, $offset, $limit)
+    private function zeroDireita($valor, $quantidade)
     {
-        // https://meiosdepagamentobradesco.com.br/SPSConsulta/GetOrderListPayment/XXXXXXXXX/boleto?token=yyyyyyyyyyyyyyyyyyyy&dataInicial=aaaa/mm/ddhh:mm&dataFinal=aaaa/mm/dd hh:mm&status=ZZZ&offset=VVV&limit=WWW
-        // https://meiosdepagamentobradesco.com.br/SPSConsulta/GetOrderListPayment/XXXXXXXXX/transferencia?token=yyyyyyyyyyyyyyyyyyyy&dataInicial=aaaa/mm/dd hh:mm&dataFinal=aaaa/mm/dd hh:mm&status=ZZZ&offset=VVV&limit=WWW
-        $url = "/SPSConsulta/GetOrderListPayment/" . $this->merchant_id . "/" . $type . "?token=" . $this->getToken() . "&dataInicial=" . $dateInitial . "&dataFinal=" . $dateFinal . "&status=" . $status . "&offset=" . $offset . "&limit=" . $limit;
-        return $this->sendCurl($url, null, true);
+        return str_pad($valor, $quantidade, '0', STR_PAD_LEFT);
     }
 
     /**
-     * @param $params_url
-     * @param null $params_data
-     * @param bool $params_authorization_header_email
-     * @return mixed
+     * @param string $uri
+     * @param array|null $params
+     * @param bool $autorizacaoPorEmail
+     * @return object
      */
-    public function sendCurl($params_url, $params_data = null, $params_authorization_header_email = false)
+    private function sendCurl($uri, $params = null, $autorizacaoPorEmail = false)
     {
-
-        if ($this->sandbox) {
-            $URL_BRADESCO = $this->url_homologacao;
-        } else {
-            $URL_BRADESCO = $this->url_producao;
-        }
-
-        $url = $URL_BRADESCO . $params_url;
-
+        $url = (($this->sandbox) ? self::URL_SANDBOX : self::URL_PROD) . $uri;
         //Configuracao do cabecalho da requisicao
         $headers = array();
-        $headers[] = "Accept: " . $this->media_type;
-        $headers[] = "Accept-Charset: " . $this->charset;
-        $headers[] = "Accept-Encoding: " . $this->media_type;
-        $headers[] = "Content-Type: " . $this->media_type . ";charset=" . $this->charset;
+        $headers[] = 'Accept: application/json';
+        $headers[] = 'Accept-Charset: UTF-8';
+        $headers[] = 'Accept-Encoding: application/json';
+        $headers[] = 'Content-Type: application/json;charset=UTF-8';
 
-        if ($params_authorization_header_email) {
-            $AuthorizationHeader = $this->email . ":" . $this->chave_seguranca;
-        } else {
-            $AuthorizationHeader = $this->merchant_id . ":" . $this->chave_seguranca;
-        }
-
+        $AuthorizationHeader = (($autorizacaoPorEmail) ? $this->merchantEmail : $this->merchantId) . ':' . $this->merchantKey;
         $AuthorizationHeaderBase64 = base64_encode($AuthorizationHeader);
-        $headers[] = "Authorization: Basic " . $AuthorizationHeaderBase64;
-
+        $headers[] = 'Authorization: Basic ' . $AuthorizationHeaderBase64;
         $ch = curl_init();
-
         curl_setopt($ch, CURLOPT_URL, $url);
-
-        if ($params_data) {
+        if ($params) {
             curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $params_data);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
         }
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
         $result = curl_exec($ch);
-
         return json_decode($result);
-
     }
 
+    /**
+     * @param $numeroPedido
+     * @return mixed
+     */
+    public function serviceGetOrderById($numeroPedido)
+    {
+        $url = '/SPSConsulta/GetOrderById/' . $this->merchantId . '?token=' . $this->getToken() . '&orderId=' . $numeroPedido;
+        return $this->sendCurl($url, null, true);
+    }
+
+    /**
+     * @return string
+     */
+    public function getToken()
+    {
+
+        if ($this->token) {
+            return $this->token;
+        }
+
+        $auth = $this->serviceAuthorization();
+        if ($auth && ($token = $auth->token->token)) {
+            $this->token = $auth->token->token;
+        }
+
+        return $this->token;
+    }
+
+    /**
+     * @return object
+     */
+    public function serviceAuthorization()
+    {
+        $url = '/SPSConsulta/Authentication/' . $this->merchantId;
+        return $this->sendCurl($url, null, true);
+    }
+
+    /**
+     * @param string $dateInitial data formato aaaa/mm/dd
+     * @param string $dateFinal data formato aaaa/mm/dd periodo maximo 6 dias
+     * @param int $status 0 (Todos os pedidos) ou 1 (Pedidos pagos).
+     * @param int $offset maior que 1
+     * @param int $limit maximo 1500
+     * @return object
+     */
+    public function serviceGetOrderListPayment($dateInitial = '', $dateFinal = '', $status = 0, $offset = 1, $limit = 10)
+    {
+        if (empty($dateInitial)) {
+            $dateInitial = date('Y/m/d', strtotime('-5 days'));
+        }
+        if (empty($dateFinal)) {
+            $dateFinal = date('Y/m/d', strtotime('+1 days'));
+        }
+        $url = '/SPSConsulta/GetOrderListPayment/' . $this->merchantId . '/boleto?token=' . $this->getToken() . '&dataInicial=' . $dateInitial . '&dataFinal=' . $dateFinal . '&status=' . $status . '&offset=' . $offset . '&limit=' . $limit;
+        return $this->sendCurl($url, null, true);
+    }
+
+    /**
+     * @param $valor
+     * @return string|string[]|null
+     */
+    private function onlyNumbers($valor)
+    {
+        return preg_replace('/\D/', '', $valor);
+    }
 }
